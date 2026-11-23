@@ -19,7 +19,7 @@ interface Props {}
       </nav>
       <ThemeToggle lang="ru" />
       <div id="auth-controls" class="auth-controls" style="display:none;">
-        <button type="button" id="auth-btn" class="btn-login">Войти</button>
+        <button type="button" id="auth-btn" class="btn-login">Войти через nmchv</button>
         <button type="button" id="logout-btn" class="btn-login" style="display:none;">Выйти</button>
         <span id="user-role" class="user-role" style="display:none;"></span>
       </div>
@@ -29,7 +29,7 @@ interface Props {}
 
 <script>
   import { supabase } from '../lib/supabase';
-  import { getCurrentUser, signOut } from '../lib/auth';
+  import { getSSOUser, signOutSSO, initiateSSO } from '../lib/sso';
 
   const authBtn = document.getElementById('auth-btn');
   const logoutBtn = document.getElementById('logout-btn');
@@ -38,7 +38,7 @@ interface Props {}
   const createLink = document.querySelector('a[data-nav="create"]') as HTMLElement | null;
 
   async function initAuth() {
-    const user = await getCurrentUser();
+    const user = await getSSOUser();
     const isAuthed = !!user;
 
     authControls?.style.setProperty('display', 'flex');
@@ -64,20 +64,12 @@ interface Props {}
   }
 
   authBtn?.addEventListener('click', async () => {
-    const email = prompt('Введите ваш email для входа:');
-    if (!email) return;
-    const { error } = await supabase.auth.signInWithOtp({ email });
-    if (error) {
-      alert('Ошибка: ' + error.message);
-      return;
-    }
-    alert('Код подтверждения отправлен на ' + email + '. Проверьте почту.');
-    initAuth();
+    const returnTo = document.referrer || '/';
+    initiateSSO(returnTo);
   });
 
   logoutBtn?.addEventListener('click', async () => {
-    await signOut();
-    initAuth();
+    await signOutSSO();
   });
 
   // Слушаем изменения сессии

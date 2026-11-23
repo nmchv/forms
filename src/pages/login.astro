@@ -9,7 +9,12 @@ import Layout from '../layouts/Base.astro';
     </div>
 
     <div class="auth-card">
-      <h2>Войти</h2>
+      <h2>Войти через nmchv</h2>
+      <button type="button" class="btn btn-primary" id="sso-btn">Войти через nmchv</button>
+
+      <div class="auth-divider">или</div>
+
+      <h2>Войти по email</h2>
       <form class="auth-form" id="login-form">
         <div class="auth-field">
           <label for="email">Email</label>
@@ -28,8 +33,15 @@ import Layout from '../layouts/Base.astro';
 
   <script>
     import { supabase } from '../lib/supabase';
+    import { initiateSSO } from '../lib/sso';
 
+    const ssoBtn = document.getElementById('sso-btn');
     const form = document.getElementById('login-form') as HTMLFormElement;
+
+    ssoBtn?.addEventListener('click', async () => {
+      const returnTo = document.referrer || '/';
+      initiateSSO(returnTo);
+    });
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();

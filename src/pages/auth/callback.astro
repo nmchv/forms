@@ -1,0 +1,57 @@
+---
+import Layout from '../../layouts/Base.astro';
+---
+<Layout>
+  <div class="page">
+    <div class="page-head">
+      <h1>Авторизация через nmchv</h1>
+      <p id="callback-status">Обработка ответа от центральной системы…</p>
+    </div>
+
+    <div class="auth-card">
+      <div id="callback-content">
+        <p>Перенаправление на страницу, с которой вы начали вход…</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { handleSSOCallback, getReturnTo } from '../../lib/sso';
+
+    async function handleCallback() {
+      const status = document.getElementById('callback-status');
+      const content = document.getElementById('callback-content');
+
+      try {
+        const user = await handleSSOCallback();
+
+        if (!user) {
+          status.textContent = 'Не удалось войти через систему nmchv.';
+          content.innerHTML = `
+            <p>Сессия не найдена. Пожалуйста, попробуйте войти ещё раз.</p>
+            <button class="btn" onclick="window.location.href='/login'">Войти ponownie</button>
+          `;
+          return;
+        }
+
+        status.textContent = `Вход выполнен как ${user.display_name} (${user.role}).`;
+        content.innerHTML = `
+          <p>Перенаправление…</p>
+        `;
+
+        const returnTo = getReturnTo('/');
+        setTimeout(() => {
+          window.location.href = returnTo;
+        }, 800);
+      } catch (err) {
+        status.textContent = 'Ошибка при обработке авторизации.';
+        content.innerHTML = `
+          <p>${err.message}</p>
+          <button class="btn" onclick="window.location.href='/login'">Попробовать снова</button>
+        `;
+      }
+    }
+
+    handleCallback();
+  </script>
+</Layout>
