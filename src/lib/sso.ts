@@ -1,6 +1,6 @@
 import { supabase, type SessionUser } from './supabase';
 
-const LOGIN_URL = import.meta.env.PUBLIC_SSO_LOGIN_URL || 'https://login.nmchv.ru';
+const LOGIN_URL = import.meta.env.PUBLIC_SSO_LOGIN_URL || 'https://www.login.nmchv.ru';
 const CALLBACK_URL = 'https://forms.nmchv.ru/auth/callback';
 
 export interface SSOUser {
