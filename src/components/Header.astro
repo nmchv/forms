@@ -1,0 +1,23 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+interface Props {}
+---
+<header class="site-header" id="site-header">
+  <div class="container">
+    <a class="brand" href="#top" aria-label="Формы — главная">
+      <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 20 L12 3 L20 20 M7.2 14.5 H16.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" />
+      </svg>
+      <span class="brand-name">Формы</span>
+    </a>
+    <div class="header-actions">
+      <nav class="nav" aria-label="Основная навигация">
+        <a href="#top" data-nav="home">Главная</a>
+        <a href="#forms" data-nav="forms">Формы</a>
+        <a href="#about" data-nav="about">О сервисе</a>
+        <a href="#contacts" data-nav="contacts">Контакты</a>
+      </nav>
+      <ThemeToggle lang="ru" />
+    </div>
+  </div>
+</header>

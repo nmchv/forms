@@ -1,0 +1,55 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+---
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Сервис форм для учителей и учеников — создавайте и проходите опросы и тесты онлайн" />
+    <title>Формы | Сервис опросов и тестов</title>
+    <meta name="theme-color" content="#08090B" />
+    <meta name="color-scheme" content="dark light" />
+    <script is:inline src="/theme.js"></script>
+    <script is:inline>document.documentElement.classList.add('js');</script>
+  </head>
+  <body>
+    <a class="skip-link" href="#forms">{'Перейти к формам'}</a>
+    <Header />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+    <script>
+      const reveal = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+      let previousScrollY = window.scrollY;
+      let scrollDirection = 'down';
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((entries) => {
+          for (const e of entries) {
+            const element = e.target as HTMLElement;
+            element.dataset.scrollDirection = scrollDirection;
+            element.classList.toggle('is-visible', e.isIntersecting);
+          }
+        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+        reveal.forEach((el) => io.observe(el));
+      } else {
+        reveal.forEach((el) => el.classList.add('is-visible'));
+      }
+
+      const header = document.getElementById('site-header');
+      const onScroll = () => {
+        const currentScrollY = window.scrollY;
+        if (currentScrollY !== previousScrollY) {
+          scrollDirection = currentScrollY > previousScrollY ? 'down' : 'up';
+          previousScrollY = currentScrollY;
+        }
+        header?.classList.toggle('is-scrolled', currentScrollY > 8);
+      };
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true });
+    </script>
+  </body>
+</html>
