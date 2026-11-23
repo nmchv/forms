@@ -16,28 +16,45 @@ import Layout from '../../layouts/Base.astro';
   </div>
 
   <script>
-    import { handleSSOCallback, getReturnTo } from '../../lib/sso';
+    import { supabase } from '../../lib/supabase';
+    import { getReturnTo } from '../../lib/sso';
 
     async function handleCallback() {
       const status = document.getElementById('callback-status');
       const content = document.getElementById('callback-content');
 
       try {
-        const user = await handleSSOCallback();
+        const params = new URLSearchParams(window.location.search);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
 
-        if (!user) {
-          status.textContent = 'Не удалось войти через систему nmchv.';
+        if (!accessToken || !refreshToken) {
+          status.textContent = 'Токены сессии не получены.';
           content.innerHTML = `
-            <p>Сессия не найдена. Пожалуйста, попробуйте войти ещё раз.</p>
+            <p>Не удалось установить сессию. Пожалуйста, попробуйте войти ещё раз.</p>
             <button class="btn" onclick="window.location.href='/login'">Войти ponownie</button>
           `;
           return;
         }
 
-        status.textContent = `Вход выполнен как ${user.display_name} (${user.role}).`;
-        content.innerHTML = `
-          <p>Перенаправление…</p>
-        `;
+        // Устанавливаем сессию Supabase на домене forms
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (error || !data.session?.user) {
+          status.textContent = 'Не удалось установить сессию на формы.';
+          content.innerHTML = `
+            <p>${error?.message || 'Сессия не валидна.'}</p>
+            <button class="btn" onclick="window.location.href='/login'">Попробовать снова</button>
+          `;
+          return;
+        }
+
+        const user = data.session.user;
+        status.textContent = `Вход выполнен как ${user.email}. Перенаправление…`;
+        content.innerHTML = `<p>Перенаправление…</p>`;
 
         const returnTo = getReturnTo('/');
         setTimeout(() => {
