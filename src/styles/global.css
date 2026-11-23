@@ -483,6 +483,22 @@ textarea.field-input { height: auto; min-height: 96px; padding: 10px 12px; resiz
 .auth-footer a { color: var(--color-accent-hover); }
 .auth-footer a:hover { color: var(--color-accent); }
 
+/* ---------- SSO login card ---------- */
+.sso-card { padding: 40px 32px; }
+.auth-header { margin-bottom: 24px; }
+.auth-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+.auth-header p {
+  color: var(--color-text-secondary);
+  font-size: var(--fs-small);
+  margin: 0;
+}
+.btn-block { width: 100%; }
+
 @media (max-width: 520px) {
   .auth-controls { gap: 6px; margin-left: 6px; }
   .btn-login { padding: 0 8px; font-size: 0.8rem; }
