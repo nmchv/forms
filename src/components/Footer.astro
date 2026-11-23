@@ -3,22 +3,58 @@ interface Props {}
 ---
 <footer class="site-footer">
   <div class="container">
-    <div class="footer-grid">
-      <div class="footer-brand">
-        <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M4 20 L12 3 L20 20 M7.2 14.5 H16.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" />
-        </svg>
-        <span class="brand-name">Формы</span>
+
+    <!-- Секция A. Основные ресурсы -->
+    <section class="footer-section-a">
+      <div class="footer-cards">
+        <a href="https://nmchv.ru/" class="footer-card" target="_blank" rel="noopener noreferrer">
+          <div class="footer-card-content">
+            <h3 class="footer-card-title">nmchv.ru</h3>
+            <p class="footer-card-desc">Основной сайт, информация об авторе и проектах экосистемы.</p>
+          </div>
+        </a>
+        <a href="https://www.login.nmchv.ru" class="footer-card" target="_blank" rel="noopener noreferrer">
+          <div class="footer-card-content">
+            <h3 class="footer-card-title">Личный кабинет</h3>
+            <p class="footer-card-desc">Профиль пользователя, настройки и доступ к сервисам.</p>
+          </div>
+        </a>
       </div>
-      <nav class="footer-nav" aria-label="Подвал навигация">
-        <a href="#top">Главная</a>
-        <a href="#create">Создать</a>
-        <a href="#cabinet">Личный кабинет</a>
-      </nav>
-      <div class="footer-copy">
-        <p>© 2026 Сервис форм. Статический сайт на GitHub Pages.</p>
-        <p>Стилистика по мотивам <a href="https://github.com/nmchv/web">nmchv/web</a>.</p>
+    </section>
+
+    <!-- Секция B. Навигация -->
+    <section class="footer-section-b">
+      <div class="footer-columns">
+        <div class="footer-column">
+          <h3 class="footer-column-title">Формы</h3>
+          <ul class="footer-column-list">
+            <li><a href="/">Главная</a></li>
+            <li><a href="/create">Создать форму</a></li>
+            <li><a href="/cabinet">Личный кабинет</a></li>
+            <li><a href="/login">Вход</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3 class="footer-column-title">Сервисы экосистемы</h3>
+          <ul class="footer-column-list">
+            <li><a href="https://geotrainer.nmchv.ru/" target="_blank" rel="noopener noreferrer">Geotrainer</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3 class="footer-column-title">Проекты</h3>
+          <ul class="footer-column-list">
+          </ul>
+        </div>
       </div>
-    </div>
+    </section>
+
+    <!-- Секция C. Нижняя информационная панель -->
+    <section class="footer-section-c">
+      <div class="footer-info">
+        <p>© 2026 nmchv.</p>
+        <p>Independent educational ecosystem.</p>
+      </div>
+    </section>
+
   </div>
 </footer>
