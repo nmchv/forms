@@ -36,6 +36,9 @@ jobs:
         run: cp CNAME public/CNAME
 
       - name: Build
+        env:
+          PUBLIC_SUPABASE_URL: https://auaespbjskmbmaylnevr.supabase.co
+          PUBLIC_SUPABASE_ANON_KEY: sb_publishable_LW6x33mJYfznN5VMzO0Qlg_bMpazVVC
         run: npm run build
 
       - name: Upload artifact
