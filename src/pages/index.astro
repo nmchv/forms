@@ -1,0 +1,94 @@
+---
+import '../styles/global.css';
+---
+
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Сервис форм для учителей и учеников" />
+    <title>Формы | Сервис опросов и тестов</title>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="/" class="logo">Формы</a>
+        <nav class="nav">
+          <a href="#forms">Формы</a>
+          <a href="#about">О сервисе</a>
+          <a href="#contacts">Контакты</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container hero-inner">
+          <h1 class="hero-title">Создавайте и проходите формы онлайн</h1>
+          <p class="hero-sub">
+            Простой сервис опросов и тестов для учителей и учеников.
+            Собирайте ответы в одном месте.
+          </p>
+          <div class="hero-actions">
+            <a href="#forms" class="btn btn-primary">Перейти к формам</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="forms" class="forms">
+        <div class="container">
+          <h2 class="section-title">Формы</h2>
+          <div class="form-list">
+            <article class="form-card">
+              <h3 class="form-card-title">Пример анкеты</h3>
+              <p class="form-card-desc">Краткая анкета для знакомства с сервисом.</p>
+              <form class="demo-form" action="#" method="POST">
+                <div class="field">
+                  <label class="field-label">Ваше имя</label>
+                  <input type="text" name="name" required class="field-input" />
+                </div>
+                <div class="field">
+                  <label class="field-label">Класс / группа</label>
+                  <input type="text" name="group" class="field-input" />
+                </div>
+                <div class="field">
+                  <label class="field-label">Комментарий</label>
+                  <textarea name="comment" rows="3" class="field-input"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Отправить</button>
+              </form>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="about" class="about">
+        <div class="container">
+          <h2 class="section-title">О сервисе</h2>
+          <p class="about-text">
+            Базовая версия сервиса форм. Сайт полностью статичный и работает на
+            GitHub Pages без сервера. В следующих версиях появятся роли
+            «учитель», «ученик» и суперадмин с доступом ко всем данным.
+          </p>
+        </div>
+      </section>
+
+      <section id="contacts" class="contacts">
+        <div class="container">
+          <h2 class="section-title">Контакты</h2>
+          <p class="contacts-text">
+            Сервис форм — личный проект. По вопросам обращайтесь через
+            репозиторий на GitHub.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p class="footer-copy">© 2026 Сервис форм. Статический сайт на GitHub Pages.</p>
+      </div>
+    </footer>
+  </body>
+</html>
