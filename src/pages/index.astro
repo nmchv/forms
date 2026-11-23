@@ -6,6 +6,31 @@ import FormsList from '../components/FormsList.astro';
 <Layout>
   <Hero />
 
+  <section id="create" class="section">
+    <div class="container">
+      <div class="section-head" data-reveal style="--d:60ms">
+        <span class="section-index">01</span>
+        <h2>Создать форму</h2>
+        <p>Заполните поля ниже и отправьте ответы. Базовая версия без авторизации.</p>
+      </div>
+      <div class="demo-form" data-reveal style="--d:140ms">
+        <div class="field">
+          <label class="field-label">Ваше имя</label>
+          <input type="text" name="name" required class="field-input" placeholder="Иван Иванов" />
+        </div>
+        <div class="field">
+          <label class="field-label">Класс / группа</label>
+          <input type="text" name="group" class="field-input" placeholder="9А" />
+        </div>
+        <div class="field">
+          <label class="field-label">Комментарий</label>
+          <textarea name="comment" rows="3" class="field-input" placeholder="Ваш отзыв…"></textarea>
+        </div>
+        <button type="submit" class="btn">Отправить ответ</button>
+      </div>
+    </div>
+  </section>
+
   <section id="about" class="section">
     <div class="container">
       <div class="section-head" data-reveal style="--d:60ms">
@@ -19,8 +44,6 @@ import FormsList from '../components/FormsList.astro';
       </div>
     </div>
   </section>
-
-  <FormsList />
 
   <section id="contacts" class="section">
     <div class="container">

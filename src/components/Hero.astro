@@ -1,5 +1,4 @@
 ---
-import HeroArt from './HeroArt.astro';
 interface Props {}
 ---
 <section class="hero" id="top" aria-labelledby="hero-title">
@@ -14,15 +13,12 @@ interface Props {}
         <li>Без сервера</li>
       </ul>
       <p class="lead" data-reveal style="--d:300ms">Простой интерфейс для создания опросов и сбора ответов в одном месте. Роли учителя, ученика и суперадмина появятся в следующих версиях.</p>
-      <a href="#forms" class="btn" data-reveal style="--d:400ms">
-        Перейти к формам
+      <a href="#create" class="btn" data-reveal style="--d:400ms">
+        Создать форму
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M5 5h10.58l-4.29 4.3 1.41 1.42L15 7.83V13h4V4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
       </a>
-    </div>
-    <div data-reveal style="--d:200ms">
-      <HeroArt />
     </div>
   </div>
 </section>
