@@ -1,0 +1,96 @@
+---
+import Layout from '../layouts/Base.astro';
+---
+<Layout>
+  <div class="page">
+    <div class="page-head">
+      <h1>Создать форму</h1>
+      <p>Создайте анкету, опрос или тест для своих учеников.</p>
+    </div>
+
+    <div class="auth-card">
+      <h2>Новая форма</h2>
+      <form class="auth-form" id="create-form">
+        <div class="auth-field">
+          <label for="title">Название формы</label>
+          <input type="text" id="title" name="title" required placeholder="Например: Входной тест 9А" />
+        </div>
+        <div class="auth-field">
+          <label for="description">Описание</label>
+          <textarea id="description" name="description" rows="3" placeholder="Кратко о чем эта форма…"></textarea>
+        </div>
+        <div class="auth-field">
+          <label for="type">Тип формы</label>
+          <select id="type" name="type" class="field-input">
+            <option value="survey">Опрос</option>
+            <option value="quiz">Тест</option>
+            <option value="assessment">Оценка знаний</option>
+            <option value="feedback">Обратная связь</option>
+          </select>
+        </div>
+        <div class="auth-actions">
+          <button type="submit" class="btn btn-primary">Создать форму</button>
+        </div>
+      </form>
+
+      <div class="auth-footer">
+        У вас нет прав на создание форм. Обратитесь к администратору.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { getCurrentUser } from '../lib/auth';
+    import { supabase } from '../lib/supabase';
+
+    const form = document.getElementById('create-form') as HTMLFormElement;
+    const footer = form?.parentElement?.querySelector('.auth-footer');
+
+    async function checkAccess() {
+      const user = await getCurrentUser();
+      if (!user) {
+        form.style.display = 'none';
+        footer.textContent = 'Вы не вошли в аккаунт. <a href="/login">Войти</a>.';
+        return;
+      }
+      if (user.role === 'student') {
+        form.style.display = 'none';
+        footer.textContent = 'Создание форм доступно только учителям и суперадминам.';
+        return;
+      }
+      // tutor и admin — доступ открыт
+    }
+
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const title = formData.get('title') as string;
+      const description = formData.get('description') as string;
+      const type = formData.get('type') as string;
+
+      const user = await getCurrentUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('forms_forms')
+        .insert({
+          title,
+          description: description || '',
+          form_type: type,
+          status: 'draft',
+          owner_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        alert('Ошибка создания формы: ' + error.message);
+        return;
+      }
+      alert('Форма создана: ' + data.title);
+      form.reset();
+    });
+
+    checkAccess();
+  </script>
+</Layout>
