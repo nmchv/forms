@@ -5,20 +5,14 @@ interface Props {}
   <div class="container hero-grid">
     <div>
       <p class="eyebrow" data-reveal style="--d:60ms">Сервис форм</p>
-      <h1 id="hero-title" data-reveal style="--d:100ms">Создавайте и проходите формы онлайн</h1>
-      <p class="additional-name" data-reveal style="--d:160ms">Опросы, анкеты и тесты для учителей и учеников</p>
-      <ul class="signature" data-reveal style="--d:220ms" aria-label="Подпись">
-        <li>Статический сайт</li>
-        <li>GitHub Pages</li>
-        <li>Без сервера</li>
-      </ul>
-      <p class="lead" data-reveal style="--d:300ms">Простой интерфейс для создания опросов и сбора ответов в одном месте. Роли учителя, ученика и суперадмина появятся в следующих версиях.</p>
-      <a href="#create" class="btn" data-reveal style="--d:400ms">
-        Создать форму
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M5 5h10.58l-4.29 4.3 1.41 1.42L15 7.83V13h4V4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-      </a>
+      <h1 id="hero-title" data-reveal style="--d:100ms">Создавайте формы онлайн</h1>
+      <p class="additional-name" data-reveal style="--d:160ms">Опросы и тесты в одном месте</p>
+      <p class="lead" data-reveal style="--d:220ms">Чтобы создать форму, войдите в личный кабинет.</p>
+      <div id="auth-controls" class="auth-controls" data-reveal style="--d:300ms">
+        <button type="button" id="auth-btn" class="btn-login">Войти через nmchv</button>
+        <button type="button" id="logout-btn" class="btn-login" style="display:none;">Выйти</button>
+        <span id="user-role" class="user-role" style="display:none;"></span>
+      </div>
     </div>
   </div>
 </section>
