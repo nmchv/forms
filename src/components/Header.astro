@@ -64,15 +64,14 @@ interface Props {}
   }
 
   authBtn?.addEventListener('click', async () => {
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
+    const email = prompt('Введите ваш email для входа:');
+    if (!email) return;
+    const { error } = await supabase.auth.signInWithOtp({ email });
     if (error) {
-      // fallback: показать email форму
-      const email = prompt('Введите email для входа:');
-      if (email) {
-        await supabase.auth.signInWithOtp({ email });
-        alert('Код подтверждения отправлен на email.');
-      }
+      alert('Ошибка: ' + error.message);
+      return;
     }
+    alert('Код подтверждения отправлен на ' + email + '. Проверьте почту.');
     initAuth();
   });
 

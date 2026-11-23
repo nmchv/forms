@@ -20,12 +20,6 @@ import Layout from '../layouts/Base.astro';
         </div>
       </form>
 
-      <div class="auth-divider">или</div>
-
-      <div class="auth-actions">
-        <button type="button" class="btn btn-primary" id="google-btn">Войти через Google</button>
-      </div>
-
       <div class="auth-footer">
         Нет аккаунта? <a href="/cabinet">Создать профиль</a>
       </div>
@@ -36,7 +30,6 @@ import Layout from '../layouts/Base.astro';
     import { supabase } from '../lib/supabase';
 
     const form = document.getElementById('login-form') as HTMLFormElement;
-    const googleBtn = document.getElementById('google-btn');
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -47,11 +40,6 @@ import Layout from '../layouts/Base.astro';
         return;
       }
       alert('Код подтверждения отправлен на ' + email + '. Проверьте почту.');
-    });
-
-    googleBtn?.addEventListener('click', async () => {
-      const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${location.origin}/cabinet` } });
-      if (error) alert('Ошибка Google-входа: ' + error.message);
     });
   </script>
 </Layout>
