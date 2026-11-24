@@ -1,40 +1,42 @@
 ---
 import Layout from '../layouts/Base.astro';
 ---
-<Layout>
-  <div class="page">
-    <div class="page-head">
+<Layout title="Создать форму | Формы">
+  <div class="page page-split">
+    <div class="page-head" data-reveal>
+      <p class="eyebrow">Конструктор</p>
       <h1>Создать форму</h1>
       <p>Создайте анкету, опрос или тест для своих учеников.</p>
     </div>
 
-    <div class="auth-card">
+    <div class="auth-card" data-reveal style="--d:120ms">
       <h2>Новая форма</h2>
-      <form class="auth-form" id="create-form">
+      <form class="auth-form" id="create-form" hidden>
         <div class="auth-field">
           <label for="title">Название формы</label>
           <input type="text" id="title" name="title" required placeholder="Например: Входной тест 9А" />
         </div>
         <div class="auth-field">
           <label for="description">Описание</label>
-          <textarea id="description" name="description" rows="3" placeholder="Кратко о чем эта форма…"></textarea>
+          <textarea id="description" name="description" rows="3" placeholder="Кратко о чём эта форма…"></textarea>
         </div>
         <div class="auth-field">
           <label for="type">Тип формы</label>
-          <select id="type" name="type" class="field-input">
+          <select id="type" name="type">
             <option value="survey">Опрос</option>
             <option value="quiz">Тест</option>
             <option value="assessment">Оценка знаний</option>
             <option value="feedback">Обратная связь</option>
           </select>
         </div>
+        <div class="form-status" id="create-status" role="status" aria-live="polite"></div>
         <div class="auth-actions">
-          <button type="submit" class="btn btn-primary">Создать форму</button>
+          <button type="submit" class="btn" id="create-submit">Создать форму</button>
         </div>
       </form>
 
-      <div class="auth-footer">
-        У вас нет прав на создание форм. Обратитесь к администратору.
+      <div class="state-block" id="create-gate">
+        <div class="loading-row"><span class="spinner" aria-hidden="true"></span><p>Проверяем доступ…</p></div>
       </div>
     </div>
   </div>
@@ -44,24 +46,49 @@ import Layout from '../layouts/Base.astro';
     import { supabase } from '../lib/supabase';
 
     const form = document.getElementById('create-form') as HTMLFormElement;
-    const footer = form?.parentElement?.querySelector('.auth-footer');
+    const gate = document.getElementById('create-gate') as HTMLElement;
+    const status = document.getElementById('create-status');
+    const submit = document.getElementById('create-submit') as HTMLButtonElement;
+
+    function show(type: 'error' | 'success', text: string) {
+      if (!status) return;
+      status.dataset.type = type;
+      status.textContent = text;
+      status.classList.remove('is-visible');
+      void status.offsetWidth;
+      status.classList.add('is-visible');
+    }
+
+    function showGate(message: string, link?: { href: string; label: string }) {
+      gate.replaceChildren();
+      const p = document.createElement('p');
+      p.textContent = message;
+      gate.append(p);
+      if (link) {
+        const a = document.createElement('a');
+        a.href = link.href;
+        a.className = 'btn';
+        a.textContent = link.label;
+        gate.append(a);
+      }
+    }
 
     async function checkAccess() {
       const user = await getCurrentUser();
       if (!user) {
-        form.style.display = 'none';
-        footer.textContent = 'Вы не вошли в аккаунт. <a href="/login">Войти</a>.';
+        showGate('Вы не вошли в аккаунт.', { href: '/login', label: 'Войти' });
         return;
       }
       if (user.role === 'student') {
-        form.style.display = 'none';
-        footer.textContent = 'Создание форм доступно только учителям и суперадминам.';
+        showGate('Создание форм доступно только учителям и суперадминам.');
         return;
       }
-      // tutor и admin — доступ открыт
+      gate.hidden = true;
+      form.hidden = false;
+      form.style.animation = 'fade-up 0.55s var(--ease) both';
     }
 
-    form?.addEventListener('submit', async (e) => {
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const formData = new FormData(form);
       const title = formData.get('title') as string;
@@ -71,6 +98,7 @@ import Layout from '../layouts/Base.astro';
       const user = await getCurrentUser();
       if (!user) return;
 
+      submit.setAttribute('aria-busy', 'true');
       const { data, error } = await supabase
         .from('forms_forms')
         .insert({
@@ -82,12 +110,13 @@ import Layout from '../layouts/Base.astro';
         })
         .select()
         .single();
+      submit.removeAttribute('aria-busy');
 
       if (error) {
-        alert('Ошибка создания формы: ' + error.message);
+        show('error', 'Ошибка создания формы: ' + error.message);
         return;
       }
-      alert('Форма создана: ' + data.title);
+      show('success', 'Форма создана: ' + data.title);
       form.reset();
     });
 

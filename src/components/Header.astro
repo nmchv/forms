@@ -1,10 +1,12 @@
 ---
 import ThemeToggle from './ThemeToggle.astro';
 interface Props {}
+const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const current = (href: string): 'page' | undefined => (path === href ? 'page' : undefined);
 ---
 <header class="site-header" id="site-header">
   <div class="container">
-    <a class="brand" href="#top" aria-label="Формы — главная">
+    <a class="brand" href="/" aria-label="Формы — главная">
       <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path d="M4 20 L12 3 L20 20 M7.2 14.5 H16.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" />
       </svg>
@@ -12,8 +14,8 @@ interface Props {}
     </a>
     <div class="header-actions">
       <nav class="nav" aria-label="Основная навигация">
-        <a href="#top" data-nav="home">Главная</a>
-        <a href="#create" data-nav="create">Создать</a>
+        <a href="/" data-nav="home" aria-current={current('/')}>Главная</a>
+        <a href="/create" data-nav="create" aria-current={current('/create')} hidden>Создать</a>
         <a href="https://nmchv.ru" target="_blank" rel="noopener noreferrer" data-nav="main">Основной сайт</a>
         <a href="https://www.login.nmchv.ru" target="_blank" rel="noopener noreferrer" data-nav="cabinet">Личный кабинет</a>
       </nav>
@@ -26,48 +28,50 @@ interface Props {}
   import { supabase } from '../lib/supabase';
   import { getSSOUser, signOutSSO, initiateSSO } from '../lib/sso';
 
+  const controls = document.getElementById('auth-controls');
   const authBtn = document.getElementById('auth-btn');
   const logoutBtn = document.getElementById('logout-btn');
   const userRoleEl = document.getElementById('user-role');
-  const authControls = document.getElementById('auth-controls');
-  const createLink = document.querySelector('a[data-nav="create"]') as HTMLElement | null;
+  const createLink = document.querySelector<HTMLElement>('a[data-nav="create"]');
 
-  async function initAuth() {
-    const user = await getSSOUser();
-    const isAuthed = !!user;
+  const roleLabels: Record<string, string> = {
+    admin: 'Суперадмин',
+    tutor: 'Учитель',
+    student: 'Ученик',
+  };
 
-    authControls?.style.setProperty('display', 'flex');
-
-    if (isAuthed) {
-      authBtn?.style.setProperty('display', 'none');
-      logoutBtn?.style.setProperty('display', 'inline-flex');
-      userRoleEl?.style.setProperty('display', 'inline-block');
-      userRoleEl.textContent = user.role === 'admin' ? 'Суперадмин' : (user.role === 'tutor' ? 'Учитель' : 'Ученик');
-
-      // Создание форм — только tutor и admin
-      if (user.role === 'student') {
-        createLink?.style.setProperty('display', 'none');
-      } else {
-        createLink?.style.setProperty('display', 'inline-flex');
-      }
-    } else {
-      authBtn?.style.setProperty('display', 'inline-flex');
-      logoutBtn?.style.setProperty('display', 'none');
-      userRoleEl?.style.setProperty('display', 'none');
-      createLink?.style.setProperty('display', 'none');
-    }
+  function setCreateVisible(visible: boolean) {
+    if (!createLink) return;
+    const wasHidden = createLink.hidden;
+    createLink.hidden = !visible;
+    if (visible && wasHidden) createLink.classList.add('is-shown');
   }
 
-  authBtn?.addEventListener('click', async () => {
-    const returnTo = document.referrer || '/';
-    initiateSSO(returnTo);
+  async function initAuth() {
+    let user = null;
+    try {
+      user = await getSSOUser();
+    } catch {
+      user = null;
+    }
+
+    if (user) {
+      if (userRoleEl) userRoleEl.textContent = roleLabels[user.role] ?? 'Ученик';
+      setCreateVisible(user.role !== 'student');
+    } else {
+      setCreateVisible(false);
+    }
+    controls?.setAttribute('data-state', user ? 'user' : 'guest');
+  }
+
+  authBtn?.addEventListener('click', () => {
+    initiateSSO(document.referrer || '/');
   });
 
   logoutBtn?.addEventListener('click', async () => {
     await signOutSSO();
   });
 
-  // Слушаем изменения сессии
   supabase.auth.onAuthStateChange(() => {
     initAuth();
   });

@@ -18,49 +18,76 @@ const forms = [
   },
 ];
 ---
-<section id="forms" class="section">
+<section id="forms" class="section" aria-labelledby="forms-title">
   <div class="container">
     <div class="section-head" data-reveal style="--d:60ms">
       <span class="section-index">01</span>
-      <h2>Формы</h2>
+      <h2 id="forms-title">Формы</h2>
       <p>Выберите форму, заполните её и отправьте ответы. Базовая версия без авторизации.</p>
     </div>
 
     <div class="forms-grid">
       {forms.map((f, i) => (
         <article class="card is-link" data-reveal style={`--d:${100 + i * 80}ms`}>
-          <div class="card-art" aria-hidden="true" style="--i:{i}">
-            {f.art}
+          <div class="card-art" aria-hidden="true">
+            <Fragment set:html={f.art} />
           </div>
           <div class="card-body">
             <div class="card-meta">
+              <span class="card-index">{String(i + 1).padStart(2, '0')}</span>
               <span class="status" data-status="live">Активно</span>
             </div>
             <h3>{f.title}</h3>
             <p>{f.desc}</p>
-            <a href="#" class="go">Открыть форму<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5h10.58l-4.29 4.3 1.41 1.42L15 7.83V13h4V4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <a href="#demo" class="go">Открыть форму<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 17 17 7M8 7h9v9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></a>
           </div>
         </article>
       ))}
     </div>
 
-    <div class="section-head" data-reveal style="--d:400ms" style="margin-top:40px">
+    <div class="section-head is-sub" id="demo" data-reveal>
       <h3>Попробовать демо-форму</h3>
+      <p>Ответ никуда не отправляется — это только пример того, как выглядит форма.</p>
     </div>
-    <div class="demo-form" data-reveal style="--d:460ms">
-      <div class="field">
-        <label class="field-label">Ваше имя</label>
-        <input type="text" name="name" required class="field-input" placeholder="Иван Иванов" />
+    <div class="demo-wrap" id="demo-wrap" data-reveal style="--d:80ms">
+      <form class="demo-form" id="demo-form">
+        <div class="field">
+          <label class="field-label" for="demo-name">Ваше имя</label>
+          <input type="text" id="demo-name" name="name" required class="field-input" placeholder="Иван Иванов" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="demo-group">Класс / группа</label>
+          <input type="text" id="demo-group" name="group" class="field-input" placeholder="9А" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="demo-comment">Комментарий</label>
+          <textarea id="demo-comment" name="comment" rows="3" class="field-input" placeholder="Ваш отзыв…"></textarea>
+        </div>
+        <button type="submit" class="btn">Отправить ответ</button>
+      </form>
+      <div class="demo-done" role="status" aria-live="polite">
+        <svg class="done-mark" viewBox="0 0 52 52" aria-hidden="true" focusable="false">
+          <circle cx="26" cy="26" r="23" pathLength="1" />
+          <path d="M15 27l8 8 14-16" pathLength="1" />
+        </svg>
+        <h4>Спасибо, ответ принят</h4>
+        <p>Так выглядит экран после отправки формы.</p>
+        <button type="button" class="btn btn-ghost btn-sm" id="demo-reset">Заполнить ещё раз</button>
       </div>
-      <div class="field">
-        <label class="field-label">Класс / группа</label>
-        <input type="text" name="group" class="field-input" placeholder="9А" />
-      </div>
-      <div class="field">
-        <label class="field-label">Комментарий</label>
-        <textarea name="comment" rows="3" class="field-input" placeholder="Ваш отзыв…"></textarea>
-      </div>
-      <button type="submit" class="btn">Отправить ответ</button>
     </div>
   </div>
 </section>
+
+<script>
+  const wrap = document.getElementById('demo-wrap');
+  const form = document.getElementById('demo-form') as HTMLFormElement | null;
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    wrap?.classList.add('is-done');
+  });
+  document.getElementById('demo-reset')?.addEventListener('click', () => {
+    form?.reset();
+    wrap?.classList.remove('is-done');
+    form?.querySelector<HTMLInputElement>('input')?.focus();
+  });
+</script>

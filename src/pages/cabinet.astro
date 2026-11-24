@@ -1,33 +1,39 @@
 ---
 import Layout from '../layouts/Base.astro';
 ---
-<Layout>
-  <div class="page">
-    <div class="page-head">
+<Layout title="Личный кабинет | Формы">
+  <div class="page page-split">
+    <div class="page-head" data-reveal>
+      <p class="eyebrow">Профиль</p>
       <h1>Личный кабинет</h1>
       <p>Ваш профиль, роли и формы.</p>
     </div>
 
-    <div class="auth-card">
-      <h2 id="cabinet-title">Загрузка профиля…</h2>
-      <div id="cabinet-content" style="display:none;">
+    <div class="auth-card" data-reveal style="--d:120ms">
+      <div class="loading-row" id="cabinet-loading">
+        <span class="spinner" aria-hidden="true"></span>
+        <h2 id="cabinet-title">Загрузка профиля…</h2>
+      </div>
+
+      <div class="auth-form state-block" id="cabinet-content" hidden>
         <div class="auth-field">
-          <label>Роль</label>
+          <label for="role-display">Роль</label>
           <input type="text" id="role-display" readonly class="field-input" />
         </div>
         <div class="auth-field">
-          <label>Email</label>
-          <input type="email" id="email-display" readonly class="field-input" />
+          <label for="email-display">Email</label>
+          <input type="text" id="email-display" readonly class="field-input" />
         </div>
         <div class="auth-field">
-          <label>Имя пользователя</label>
+          <label for="username-display">Имя пользователя</label>
           <input type="text" id="username-display" readonly class="field-input" />
         </div>
         <div class="auth-actions">
-          <button type="button" class="btn" id="logout-btn">Выйти</button>
+          <button type="button" class="btn btn-ghost" id="logout-btn">Выйти</button>
         </div>
       </div>
-      <div id="cabinet-not-authed" style="display:none;">
+
+      <div class="state-block" id="cabinet-not-authed" hidden>
         <p>Вы не вошли в аккаунт.</p>
         <a href="/login" class="btn">Войти</a>
       </div>
@@ -37,28 +43,26 @@ import Layout from '../layouts/Base.astro';
   <script>
     import { getCurrentUser, signOut } from '../lib/auth';
 
-    const title = document.getElementById('cabinet-title');
-    const content = document.getElementById('cabinet-content');
-    const notAuthed = document.getElementById('cabinet-not-authed');
+    const loading = document.getElementById('cabinet-loading') as HTMLElement;
+    const content = document.getElementById('cabinet-content') as HTMLElement;
+    const notAuthed = document.getElementById('cabinet-not-authed') as HTMLElement;
     const roleDisplay = document.getElementById('role-display') as HTMLInputElement;
     const emailDisplay = document.getElementById('email-display') as HTMLInputElement;
     const usernameDisplay = document.getElementById('username-display') as HTMLInputElement;
     const logoutBtn = document.getElementById('logout-btn');
 
-    const roleLabels = { student: 'Ученик', tutor: 'Учитель', admin: 'Суперадмин' };
+    const roleLabels = { student: 'Ученик', tutor: 'Учитель', admin: 'Суперадмин' } as const;
 
     async function load() {
       const user = await getCurrentUser();
+      loading.hidden = true;
       if (!user) {
-        notAuthed.style.display = 'block';
-        content.style.display = 'none';
-        title.textContent = 'Личный кабинет';
+        notAuthed.hidden = false;
+        content.hidden = true;
         return;
       }
-
-      notAuthed.style.display = 'none';
-      content.style.display = 'block';
-      title.textContent = 'Личный кабинет — ' + roleLabels[user.role];
+      notAuthed.hidden = true;
+      content.hidden = false;
       roleDisplay.value = roleLabels[user.role];
       emailDisplay.value = user.email ?? '—';
       usernameDisplay.value = user.username ?? '—';

@@ -1,21 +1,23 @@
 ---
 import Layout from '../layouts/Base.astro';
 ---
-<Layout>
-  <div class="page">
-    <div class="page-head">
+<Layout title="Вход | Формы">
+  <div class="page page-split">
+    <div class="page-head" data-reveal>
+      <p class="eyebrow">Аккаунт</p>
       <h1>Вход в аккаунт</h1>
       <p>Войдите, чтобы управлять формами и просматривать результаты.</p>
     </div>
 
-    <div class="auth-card sso-card">
+    <div class="auth-card sso-card" data-reveal style="--d:120ms">
       <div class="auth-header">
         <h2>Войти через nmchv</h2>
         <p>Единый вход для всех сервисов экосистемы nmchv</p>
       </div>
 
-      <button type="button" class="btn btn-primary btn-block" id="sso-btn">
+      <button type="button" class="btn btn-block" id="sso-btn">
         Войти через nmchv
+        <svg class="arrow-right" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
       </button>
 
       <div class="auth-divider">или</div>
@@ -30,8 +32,9 @@ import Layout from '../layouts/Base.astro';
           <label for="email">Электронная почта</label>
           <input type="email" id="email" name="email" required autocomplete="email" placeholder="you@example.com" />
         </div>
+        <div class="form-status" id="login-status" role="status" aria-live="polite"></div>
         <div class="auth-actions">
-          <button type="submit" class="btn btn-primary btn-block">Получить код входа</button>
+          <button type="submit" class="btn btn-block" id="login-submit">Получить код входа</button>
         </div>
       </form>
 
@@ -43,24 +46,37 @@ import Layout from '../layouts/Base.astro';
 
   <script>
     import { initiateSSO } from '../lib/sso';
+    import { supabase } from '../lib/supabase';
 
     const ssoBtn = document.getElementById('sso-btn');
-    const form = document.getElementById('login-form') as HTMLFormElement;
+    const form = document.getElementById('login-form') as HTMLFormElement | null;
+    const submit = document.getElementById('login-submit') as HTMLButtonElement | null;
+    const status = document.getElementById('login-status');
+
+    function show(type: 'error' | 'success', text: string) {
+      if (!status) return;
+      status.dataset.type = type;
+      status.textContent = text;
+      status.classList.remove('is-visible');
+      void status.offsetWidth; // перезапуск анимации появления
+      status.classList.add('is-visible');
+    }
 
     ssoBtn?.addEventListener('click', () => {
-      const returnTo = document.referrer || '/';
-      initiateSSO(returnTo);
+      initiateSSO(document.referrer || '/');
     });
 
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = form.email.value;
-      const { error } = await (await import('../lib/supabase')).supabase.auth.signInWithOtp({ email });
+      const email = (form.elements.namedItem('email') as HTMLInputElement).value.trim();
+      submit?.setAttribute('aria-busy', 'true');
+      const { error } = await supabase.auth.signInWithOtp({ email });
+      submit?.removeAttribute('aria-busy');
       if (error) {
-        alert('Ошибка: ' + error.message);
+        show('error', 'Ошибка: ' + error.message);
         return;
       }
-      alert('Код подтверждения отправлен на ' + email + '. Проверьте почту.');
+      show('success', 'Код подтверждения отправлен на ' + email + '. Проверьте почту.');
     });
   </script>
 </Layout>
