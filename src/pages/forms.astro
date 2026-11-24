@@ -1,0 +1,328 @@
+---
+import Layout from '../layouts/Base.astro';
+---
+<Layout title="Создание форм | Формы">
+  <div class="page page-split">
+    <div class="page-head" data-reveal>
+      <p class="eyebrow">Конструктор</p>
+      <h1>Создать форму</h1>
+      <p>Создайте анкету, опрос или тест для своих учеников.</p>
+    </div>
+
+    <div class="auth-card" data-reveal style="--d:120ms">
+      <h2>Новая форма</h2>
+      <form class="auth-form" id="create-form" hidden>
+        <div class="auth-field">
+          <label for="title">Название формы</label>
+          <input type="text" id="title" name="title" required placeholder="Например: Входной тест 9А" />
+        </div>
+        <div class="auth-field">
+          <label for="description">Описание</label>
+          <textarea id="description" name="description" rows="3" placeholder="Кратко о чём эта форма…"></textarea>
+        </div>
+        <div class="auth-field">
+          <label for="type">Тип формы</label>
+          <select id="type" name="type">
+            <option value="survey">Опрос</option>
+            <option value="quiz">Тест</option>
+            <option value="assessment">Оценка знаний</option>
+            <option value="feedback">Обратная связь</option>
+          </select>
+        </div>
+        <div class="form-status" id="create-status" role="status" aria-live="polite"></div>
+        <div class="auth-actions">
+          <button type="submit" class="btn" id="create-submit">Создать форму</button>
+        </div>
+      </form>
+
+      <section id="questions-builder" hidden>
+        <h2>Вопросы формы</h2>
+        <p>Добавьте вопросы. Для вопросов с вариантами ответов укажите варианты.</p>
+        <div class="auth-field">
+          <label for="q-title">Текст вопроса</label>
+          <input type="text" id="q-title" placeholder="Например: Какой у вас класс?" />
+        </div>
+        <div class="auth-field">
+          <label for="q-type">Тип вопроса</label>
+          <select id="q-type">
+            <option value="short_text">Короткий текст (ввод)</option>
+            <option value="long_text">Развёрнутый текст (ввод)</option>
+            <option value="single_choice">Один вариант из списка</option>
+            <option value="multiple_choice">Несколько вариантов из списка</option>
+          </select>
+        </div>
+        <div class="auth-field" id="q-required-field" style="display:flex;align-items:center;gap:10px">
+          <input type="checkbox" id="q-required" />
+          <label for="q-required" style="margin:0;font-weight:normal">Обязательный вопрос</label>
+        </div>
+        <div id="q-options-wrap" hidden>
+          <div class="auth-field">
+            <label>Варианты ответа</label>
+            <div id="q-options-list" class="options-list"></div>
+            <button type="button" class="btn btn-ghost btn-sm" id="q-add-option">+ Добавить вариант</button>
+          </div>
+        </div>
+        <div class="form-status" id="q-status" role="status" aria-live="polite"></div>
+        <div class="auth-actions">
+          <button type="button" class="btn" id="q-add">Добавить вопрос к форме</button>
+          <button type="button" class="btn btn-ghost" id="q-save">Сохранить вопросы в форме</button>
+        </div>
+
+        <div id="q-list-wrap" hidden>
+          <h3>Добавленные вопросы</h3>
+          <ul id="q-list" class="q-list"></ul>
+        </div>
+      </section>
+
+      <div class="state-block" id="create-gate">
+        <div class="loading-row"><span class="spinner" aria-hidden="true"></span><p>Проверяем доступ…</p></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { getCurrentUser } from '../lib/auth';
+    import { supabase } from '../lib/supabase';
+
+    const form = document.getElementById('create-form') as HTMLFormElement;
+    const gate = document.getElementById('create-gate') as HTMLElement;
+    const status = document.getElementById('create-status');
+    const submit = document.getElementById('create-submit') as HTMLButtonElement;
+
+    const builder = document.getElementById('questions-builder') as HTMLElement;
+    const qTitle = document.getElementById('q-title') as HTMLInputElement;
+    const qType = document.getElementById('q-type') as HTMLSelectElement;
+    const qRequired = document.getElementById('q-required') as HTMLInputElement;
+    const qOptionsWrap = document.getElementById('q-options-wrap') as HTMLElement;
+    const qOptionsList = document.getElementById('q-options-list') as HTMLElement;
+    const qAddOption = document.getElementById('q-add-option') as HTMLButtonElement;
+    const qStatus = document.getElementById('q-status') as HTMLElement;
+    const qAdd = document.getElementById('q-add') as HTMLButtonElement;
+    const qSave = document.getElementById('q-save') as HTMLButtonElement;
+    const qListWrap = document.getElementById('q-list-wrap') as HTMLElement;
+    const qList = document.getElementById('q-list') as HTMLUListElement;
+
+    const QUESTION_TYPES_WITH_OPTIONS = new Set(['single_choice', 'multiple_choice']);
+
+    function show(el: HTMLElement | null, type: 'error' | 'success', text: string) {
+      if (!el) return;
+      el.dataset.type = type;
+      el.textContent = text;
+      el.classList.remove('is-visible');
+      void el.offsetWidth;
+      el.classList.add('is-visible');
+    }
+
+    function showGate(message: string, link?: { href: string; label: string }) {
+      gate.replaceChildren();
+      const p = document.createElement('p');
+      p.textContent = message;
+      gate.append(p);
+      if (link) {
+        const a = document.createElement('a');
+        a.href = link.href;
+        a.className = 'btn';
+        a.textContent = link.label;
+        gate.append(a);
+      }
+    }
+
+    interface OptionDraft { text: string; }
+    interface QuestionDraft {
+      title: string;
+      description: string;
+      type: string;
+      is_required: boolean;
+      options: OptionDraft[];
+    }
+
+    let currentFormId: string | null = null;
+    const questions: QuestionDraft[] = [];
+
+    function renderOptionsEditor() {
+      qOptionsList.replaceChildren();
+      const hasOptions = QUESTION_TYPES_WITH_OPTIONS.has(qType.value);
+      qOptionsWrap.hidden = !hasOptions;
+      if (!hasOptions) return;
+      for (let i = 0; i < 2; i++) addOptionRow();
+    }
+
+    function addOptionRow(text = '') {
+      const row = document.createElement('div');
+      row.className = 'option-row';
+      row.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:6px';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'Вариант ответа';
+      input.value = text;
+      input.className = 'field-input';
+      input.style.flex = '1';
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'btn btn-ghost btn-sm';
+      remove.textContent = 'Удалить';
+      remove.addEventListener('click', () => row.remove());
+      row.append(input, remove);
+      qOptionsList.append(row);
+    }
+
+    function optionValues(): string[] {
+      return Array.from(qOptionsList.querySelectorAll<HTMLInputElement>('input'))
+        .map((i) => i.value.trim())
+        .filter((t) => t.length > 0);
+    }
+
+    qType.addEventListener('change', renderOptionsEditor);
+    qAddOption.addEventListener('click', () => addOptionRow());
+
+    function renderQuestionsList() {
+      qList.replaceChildren();
+      questions.forEach((q, i) => {
+        const li = document.createElement('li');
+        li.style.cssText = 'display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid var(--color-border);border-radius:8px;margin-top:6px;background:var(--color-surface)';
+        const info = document.createElement('div');
+        info.innerHTML = `<div style="font-weight:600">${i + 1}. ${q.title}</div><div style="font-size:0.85rem;color:var(--color-text-secondary)">${q.type}${q.is_required ? ' · обязательно' : ''}${q.options.length ? ' · вариантов: ' + q.options.length : ''}</div>`;
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'btn btn-ghost btn-sm';
+        remove.textContent = 'Удалить';
+        remove.addEventListener('click', () => {
+          questions.splice(i, 1);
+          renderQuestionsList();
+        });
+        li.append(info, remove);
+        qList.append(li);
+      });
+      qListWrap.hidden = questions.length === 0;
+    }
+
+    async function checkAccess() {
+      const user = await getCurrentUser();
+      if (!user) {
+        showGate('Вы не вошли в аккаунт.', { href: '/login', label: 'Войти' });
+        return;
+      }
+      if (user.role === 'student') {
+        showGate('Создание форм доступно только учителям и суперадминам.');
+        return;
+      }
+      gate.hidden = true;
+      form.hidden = false;
+      form.style.animation = 'fade-up 0.55s var(--ease) both';
+      renderOptionsEditor();
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const title = formData.get('title') as string;
+      const description = formData.get('description') as string;
+      const type = formData.get('type') as string;
+
+      const user = await getCurrentUser();
+      if (!user) return;
+
+      submit.setAttribute('aria-busy', 'true');
+      const { data, error } = await supabase
+        .from('forms_forms')
+        .insert({
+          title,
+          description: description || '',
+          form_type: type,
+          status: 'draft',
+          owner_id: user.id,
+        })
+        .select()
+        .single();
+      submit.removeAttribute('aria-busy');
+
+      if (error) {
+        show(status, 'error', 'Ошибка создания формы: ' + error.message);
+        return;
+      }
+      show(status, 'success', 'Форма создана: ' + data.title);
+      currentFormId = data.id;
+      form.hidden = true;
+      builder.hidden = false;
+      builder.style.animation = 'fade-up 0.55s var(--ease) both';
+    });
+
+    qAdd.addEventListener('click', () => {
+      if (!currentFormId) return;
+      const title = qTitle.value.trim();
+      if (!title) {
+        show(qStatus, 'error', 'Введите текст вопроса');
+        return;
+      }
+      if (QUESTION_TYPES_WITH_OPTIONS.has(qType.value)) {
+        const opts = optionValues();
+        if (opts.length < 2) {
+          show(qStatus, 'error', 'Для вопроса с вариантами укажите хотя бы 2 варианта');
+          return;
+        }
+        questions.push({ title, description: '', type: qType.value, is_required: qRequired.checked, options: opts.map((t) => ({ text: t })) });
+      } else {
+        questions.push({ title, description: '', type: qType.value, is_required: qRequired.checked, options: [] });
+      }
+      qTitle.value = '';
+      qRequired.checked = false;
+      renderOptionsEditor();
+      renderQuestionsList();
+      show(qStatus, 'success', 'Вопрос добавлен к черновику');
+    });
+
+    qSave.addEventListener('click', async () => {
+      if (!currentFormId) {
+        show(qStatus, 'error', 'Сначала создайте форму');
+        return;
+      }
+      if (questions.length === 0) {
+        show(qStatus, 'error', 'Добавьте хотя бы один вопрос');
+        return;
+      }
+
+      qSave.setAttribute('aria-busy', 'true');
+      try {
+        for (let i = 0; i < questions.length; i++) {
+          const q = questions[i];
+          const { data: question, error: qError } = await supabase
+            .from('forms_questions')
+            .insert({
+              form_id: currentFormId,
+              section_id: null,
+              title: q.title,
+              description: q.description,
+              type: q.type,
+              position: i,
+              is_required: q.is_required,
+              points: 1,
+              settings: {},
+            })
+            .select()
+            .single();
+          if (qError) throw qError;
+
+          if (QUESTION_TYPES_WITH_OPTIONS.has(q.type) && q.options.length > 0) {
+            const options = q.options.map((opt, pos) => ({
+              question_id: question.id,
+              text: opt.text,
+              position: pos,
+              settings: {},
+            }));
+            const { error: oError } = await supabase.from('forms_question_options').insert(options);
+            if (oError) throw oError;
+          }
+        }
+        show(qStatus, 'success', `Все ${questions.length} вопросов сохранены в форме`);
+        questions.length = 0;
+        renderQuestionsList();
+      } catch (err: any) {
+        show(qStatus, 'error', 'Ошибка сохранения вопросов: ' + (err?.message || String(err)));
+      } finally {
+        qSave.removeAttribute('aria-busy');
+      }
+    });
+
+    checkAccess();
+  </script>
+</Layout>
