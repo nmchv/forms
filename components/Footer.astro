@@ -1,0 +1,63 @@
+---
+interface Props {}
+const arrow = 'M7 17 17 7M8 7h9v9';
+const ecosystem = [
+  { href: 'https://www.diary.nmchv.ru', label: 'Дневник учителя' },
+  { href: 'https://www.geotrainer.nmchv.ru', label: 'Геотренажер' },
+  { href: 'https://www.tutor.nmchv.ru', label: 'Тьюторская платформа' },
+  { href: 'https://www.exam.nmchv.ru', label: 'Exam trainer' },
+  { href: 'https://www.wiki.nmchv.ru', label: 'Учебные материалы' },
+  { href: 'https://www.game.nmchv.ru', label: 'Terra Incognita' },
+  { href: 'https://www.graph.nmchv.ru', label: 'Граф знаний' },
+  { href: 'https://www.map.nmchv.ru', label: 'Интерактивная карта' },
+];
+---
+<footer class="site-footer">
+  <div class="container">
+
+    <section class="footer-section-a" aria-label="Основные ресурсы">
+      <div class="footer-cards">
+        <a href="https://nmchv.ru/" class="footer-card" target="_blank" rel="noopener noreferrer" data-reveal style="--d:0ms">
+          <svg class="footer-card-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d={arrow} /></svg>
+          <h3 class="footer-card-title">nmchv.ru</h3>
+          <p class="footer-card-desc">Основной сайт, информация об авторе и проектах экосистемы.</p>
+        </a>
+        <a href="https://www.login.nmchv.ru" class="footer-card" target="_blank" rel="noopener noreferrer" data-reveal style="--d:80ms">
+          <svg class="footer-card-arrow" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d={arrow} /></svg>
+          <h3 class="footer-card-title">Личный кабинет</h3>
+          <p class="footer-card-desc">Профиль пользователя, настройки и доступ к сервисам.</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="footer-section-b" aria-label="Навигация">
+      <div class="footer-columns" data-reveal>
+        <div class="footer-column">
+          <h3 class="footer-column-title">Формы</h3>
+          <ul class="footer-column-list">
+            <li><a href="/">Главная</a></li>
+            <li><a href="/create">Создать форму</a></li>
+            <li><a href="/cabinet">Личный кабинет</a></li>
+            <li><a href="/login">Вход</a></li>
+          </ul>
+        </div>
+        <div class="footer-column">
+          <h3 class="footer-column-title">Сервисы экосистемы</h3>
+          <ul class="footer-column-list footer-column-list--split">
+            {ecosystem.map((s) => (
+              <li><a href={s.href} target="_blank" rel="noopener noreferrer">{s.label}</a></li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="footer-section-c">
+      <div class="footer-info">
+        <p>© 2026 nmchv.</p>
+        <p>Независимая образовательная экосистема.</p>
+      </div>
+    </section>
+
+  </div>
+</footer>

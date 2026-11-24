@@ -1,0 +1,78 @@
+---
+import Layout from '../layouts/Base.astro';
+---
+<Layout title="Личный кабинет | Формы">
+  <div class="page page-split">
+    <div class="page-head" data-reveal>
+      <p class="eyebrow">Профиль</p>
+      <h1>Личный кабинет</h1>
+      <p>Ваш профиль, роли и формы.</p>
+    </div>
+
+    <div class="auth-card" data-reveal style="--d:120ms">
+      <div class="loading-row" id="cabinet-loading">
+        <span class="spinner" aria-hidden="true"></span>
+        <h2 id="cabinet-title">Загрузка профиля…</h2>
+      </div>
+
+      <div class="auth-form state-block" id="cabinet-content" hidden>
+        <div class="auth-field">
+          <label for="role-display">Роль</label>
+          <input type="text" id="role-display" readonly class="field-input" />
+        </div>
+        <div class="auth-field">
+          <label for="email-display">Email</label>
+          <input type="text" id="email-display" readonly class="field-input" />
+        </div>
+        <div class="auth-field">
+          <label for="username-display">Имя пользователя</label>
+          <input type="text" id="username-display" readonly class="field-input" />
+        </div>
+        <div class="auth-actions">
+          <button type="button" class="btn btn-ghost" id="logout-btn">Выйти</button>
+        </div>
+      </div>
+
+      <div class="state-block" id="cabinet-not-authed" hidden>
+        <p>Вы не вошли в аккаунт.</p>
+        <a href="/login" class="btn">Войти</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { getCurrentUser, signOut } from '../lib/auth';
+
+    const loading = document.getElementById('cabinet-loading') as HTMLElement;
+    const content = document.getElementById('cabinet-content') as HTMLElement;
+    const notAuthed = document.getElementById('cabinet-not-authed') as HTMLElement;
+    const roleDisplay = document.getElementById('role-display') as HTMLInputElement;
+    const emailDisplay = document.getElementById('email-display') as HTMLInputElement;
+    const usernameDisplay = document.getElementById('username-display') as HTMLInputElement;
+    const logoutBtn = document.getElementById('logout-btn');
+
+    const roleLabels = { student: 'Ученик', tutor: 'Учитель', admin: 'Суперадмин' } as const;
+
+    async function load() {
+      const user = await getCurrentUser();
+      loading.hidden = true;
+      if (!user) {
+        notAuthed.hidden = false;
+        content.hidden = true;
+        return;
+      }
+      notAuthed.hidden = true;
+      content.hidden = false;
+      roleDisplay.value = roleLabels[user.role];
+      emailDisplay.value = user.email ?? '—';
+      usernameDisplay.value = user.username ?? '—';
+    }
+
+    logoutBtn?.addEventListener('click', async () => {
+      await signOut();
+      load();
+    });
+
+    load();
+  </script>
+</Layout>

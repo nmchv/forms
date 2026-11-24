@@ -1,0 +1,72 @@
+---
+import Layout from '../../layouts/Base.astro';
+---
+<Layout title="Авторизация | Формы">
+  <div class="page page-split">
+    <div class="page-head" data-reveal>
+      <p class="eyebrow">Единый вход</p>
+      <h1>Авторизация через nmchv</h1>
+      <p id="callback-status" role="status" aria-live="polite">Обработка ответа от центральной системы…</p>
+    </div>
+
+    <div class="auth-card" data-reveal style="--d:120ms">
+      <div class="state-block" id="callback-content">
+        <div class="loading-row"><span class="spinner" aria-hidden="true"></span><p>Перенаправление на страницу, с которой вы начали вход…</p></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    import { supabase } from '../../lib/supabase';
+    import { getReturnTo } from '../../lib/sso';
+
+    const status = document.getElementById('callback-status') as HTMLElement;
+    const content = document.getElementById('callback-content') as HTMLElement;
+
+    function fail(title: string, message: string) {
+      status.textContent = title;
+      content.replaceChildren();
+      const p = document.createElement('p');
+      p.textContent = message;
+      const a = document.createElement('a');
+      a.href = '/login';
+      a.className = 'btn';
+      a.textContent = 'Попробовать снова';
+      content.append(p, a);
+    }
+
+    async function handleCallback() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+
+        if (!accessToken || !refreshToken) {
+          fail('Токены сессии не получены.', 'Не удалось установить сессию. Пожалуйста, попробуйте войти ещё раз.');
+          return;
+        }
+
+        // Устанавливаем сессию Supabase на домене forms
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (error || !data.session?.user) {
+          fail('Не удалось установить сессию на формы.', error?.message || 'Сессия не валидна.');
+          return;
+        }
+
+        status.textContent = `Вход выполнен как ${data.session.user.email}. Перенаправление…`;
+        const returnTo = getReturnTo('/');
+        setTimeout(() => {
+          window.location.href = returnTo;
+        }, 800);
+      } catch (err) {
+        fail('Ошибка при обработке авторизации.', err instanceof Error ? err.message : String(err));
+      }
+    }
+
+    handleCallback();
+  </script>
+</Layout>

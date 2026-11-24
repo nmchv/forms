@@ -1,0 +1,93 @@
+---
+interface Props {}
+const forms = [
+  {
+    title: 'Анкета ученика',
+    desc: 'Краткая анкета для знакомства: имя, класс, интересы.',
+    art: '<svg viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="140" rx="8" fill="var(--color-background)"/><path d="M20 40h160v80H20z" stroke="var(--color-border)" stroke-width="1"/><circle cx="40" cy="50" r="4" fill="var(--color-accent)"/><circle cx="70" cy="80" r="4" fill="var(--color-accent)"/><circle cx="100" cy="100" r="4" fill="var(--color-accent)"/><path d="M130 40Q160 40 160 70Q160 100 130 100" stroke="var(--color-accent)" stroke-width="2" fill="none"/></svg>',
+  },
+  {
+    title: 'Тест по предмету',
+    desc: 'Проверка знаний с автоматическим подсчётом баллов.',
+    art: '<svg viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="140" rx="8" fill="var(--color-background)"/><path d="M20 40h160v80H20z" stroke="var(--color-border)" stroke-width="1"/><rect x="40" y="60" width="24" height="24" stroke="var(--color-accent)" stroke-width="2" fill="none"/><rect x="70" y="80" width="24" height="24" stroke="var(--color-accent)" stroke-width="2" fill="none"/><rect x="100" y="100" width="24" height="24" stroke="var(--color-accent)" stroke-width="2" fill="none"/><path d="M52 72L58 78L66 70" stroke="var(--color-accent)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  },
+  {
+    title: 'Опрос обратной связи',
+    desc: 'Сбор отзывов от учеников и родителей.',
+    art: '<svg viewBox="0 0 200 140" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="140" rx="8" fill="var(--color-background)"/><path d="M20 40h160v80H20z" stroke="var(--color-border)" stroke-width="1"/><circle cx="40" cy="60" r="8" fill="none" stroke="var(--color-accent)" stroke-width="2"/><circle cx="100" cy="80" r="6" fill="none" stroke="var(--color-accent)" stroke-width="2"/><circle cx="160" cy="100" r="4" fill="none" stroke="var(--color-accent)" stroke-width="2"/><path d="M40 80Q80 110 100 80Q120 50 140 80" stroke="var(--color-accent)" stroke-width="2" fill="none"/></svg>',
+  },
+];
+---
+<section id="forms" class="section" aria-labelledby="forms-title">
+  <div class="container">
+    <div class="section-head" data-reveal style="--d:60ms">
+      <span class="section-index">01</span>
+      <h2 id="forms-title">Формы</h2>
+      <p>Выберите форму, заполните её и отправьте ответы. Базовая версия без авторизации.</p>
+    </div>
+
+    <div class="forms-grid">
+      {forms.map((f, i) => (
+        <article class="card is-link" data-reveal style={`--d:${100 + i * 80}ms`}>
+          <div class="card-art" aria-hidden="true">
+            <Fragment set:html={f.art} />
+          </div>
+          <div class="card-body">
+            <div class="card-meta">
+              <span class="card-index">{String(i + 1).padStart(2, '0')}</span>
+              <span class="status" data-status="live">Активно</span>
+            </div>
+            <h3>{f.title}</h3>
+            <p>{f.desc}</p>
+            <a href="#demo" class="go">Открыть форму<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 17 17 7M8 7h9v9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></a>
+          </div>
+        </article>
+      ))}
+    </div>
+
+    <div class="section-head is-sub" id="demo" data-reveal>
+      <h3>Попробовать демо-форму</h3>
+      <p>Ответ никуда не отправляется — это только пример того, как выглядит форма.</p>
+    </div>
+    <div class="demo-wrap" id="demo-wrap" data-reveal style="--d:80ms">
+      <form class="demo-form" id="demo-form">
+        <div class="field">
+          <label class="field-label" for="demo-name">Ваше имя</label>
+          <input type="text" id="demo-name" name="name" required class="field-input" placeholder="Иван Иванов" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="demo-group">Класс / группа</label>
+          <input type="text" id="demo-group" name="group" class="field-input" placeholder="9А" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label class="field-label" for="demo-comment">Комментарий</label>
+          <textarea id="demo-comment" name="comment" rows="3" class="field-input" placeholder="Ваш отзыв…"></textarea>
+        </div>
+        <button type="submit" class="btn">Отправить ответ</button>
+      </form>
+      <div class="demo-done" role="status" aria-live="polite">
+        <svg class="done-mark" viewBox="0 0 52 52" aria-hidden="true" focusable="false">
+          <circle cx="26" cy="26" r="23" pathLength="1" />
+          <path d="M15 27l8 8 14-16" pathLength="1" />
+        </svg>
+        <h4>Спасибо, ответ принят</h4>
+        <p>Так выглядит экран после отправки формы.</p>
+        <button type="button" class="btn btn-ghost btn-sm" id="demo-reset">Заполнить ещё раз</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const wrap = document.getElementById('demo-wrap');
+  const form = document.getElementById('demo-form') as HTMLFormElement | null;
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    wrap?.classList.add('is-done');
+  });
+  document.getElementById('demo-reset')?.addEventListener('click', () => {
+    form?.reset();
+    wrap?.classList.remove('is-done');
+    form?.querySelector<HTMLInputElement>('input')?.focus();
+  });
+</script>
