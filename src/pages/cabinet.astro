@@ -12,7 +12,7 @@ import Layout from '../layouts/Base.astro';
     <div class="auth-card" data-reveal style="--d:120ms">
       <div class="loading-row" id="cabinet-loading">
         <span class="spinner" aria-hidden="true"></span>
-        <h2 id="cabinet-title">Загрузка профиля…</h2>
+        <h2 id="cabinet-title">Проверка сессии…</h2>
       </div>
 
       <div class="auth-form state-block" id="cabinet-content" hidden>
@@ -28,24 +28,27 @@ import Layout from '../layouts/Base.astro';
           <label for="username-display">Имя пользователя</label>
           <input type="text" id="username-display" readonly class="field-input" />
         </div>
+        <div id="cabinet-notice" class="form-status"></div>
         <div class="auth-actions">
           <button type="button" class="btn btn-ghost" id="logout-btn">Выйти</button>
         </div>
       </div>
 
-      <div class="state-block" id="cabinet-not-authed" hidden>
-        <p>Вы не вошли в аккаунт.</p>
+      <div class="state-block" id="cabinet-state" hidden>
+        <p id="cabinet-state-text"></p>
         <a href="/login" class="btn">Войти</a>
       </div>
     </div>
   </div>
 
   <script>
-    import { getCurrentUser, signOut } from '../lib/auth';
+    import { resolveAuth, signOut } from '../lib/auth';
 
     const loading = document.getElementById('cabinet-loading') as HTMLElement;
     const content = document.getElementById('cabinet-content') as HTMLElement;
-    const notAuthed = document.getElementById('cabinet-not-authed') as HTMLElement;
+    const stateBlock = document.getElementById('cabinet-state') as HTMLElement;
+    const stateText = document.getElementById('cabinet-state-text') as HTMLElement;
+    const notice = document.getElementById('cabinet-notice') as HTMLElement;
     const roleDisplay = document.getElementById('role-display') as HTMLInputElement;
     const emailDisplay = document.getElementById('email-display') as HTMLInputElement;
     const usernameDisplay = document.getElementById('username-display') as HTMLInputElement;
@@ -53,19 +56,52 @@ import Layout from '../layouts/Base.astro';
 
     const roleLabels = { student: 'Ученик', tutor: 'Учитель', admin: 'Суперадмин' } as const;
 
-    async function load() {
-      const user = await getCurrentUser();
+    function showState(text: string) {
       loading.hidden = true;
-      if (!user) {
-        notAuthed.hidden = false;
-        content.hidden = true;
+      content.hidden = true;
+      stateBlock.hidden = false;
+      stateText.textContent = text;
+    }
+
+    async function load() {
+      const result = await resolveAuth();
+      loading.hidden = true;
+
+      if (result.status === 'unauthenticated') {
+        showState('Вы не вошли в аккаунт.');
         return;
       }
-      notAuthed.hidden = true;
+
+      if (result.status === 'expired') {
+        showState('Сессия истекла. Войдите ещё раз.');
+        return;
+      }
+
+      if (!result.user) {
+        showState('Не удалось определить пользователя.');
+        return;
+      }
+
+      stateBlock.hidden = true;
       content.hidden = false;
-      roleDisplay.value = roleLabels[user.role];
-      emailDisplay.value = user.email ?? '—';
-      usernameDisplay.value = user.username ?? '—';
+
+      roleDisplay.value = result.user.role ? roleLabels[result.user.role] : 'Не назначена';
+      emailDisplay.value = result.user.email ?? '—';
+      usernameDisplay.value = result.user.username ?? '—';
+
+      notice.hidden = true;
+      notice.textContent = '';
+      notice.dataset.type = '';
+
+      if (result.code === 'role_missing') {
+        notice.hidden = false;
+        notice.dataset.type = 'error';
+        notice.textContent = result.error || 'Роль не назначена.';
+      } else if (result.code === 'profile_error' || result.code === 'role_error') {
+        notice.hidden = false;
+        notice.dataset.type = 'error';
+        notice.textContent = result.error || 'Ошибка загрузки данных.';
+      }
     }
 
     logoutBtn?.addEventListener('click', async () => {

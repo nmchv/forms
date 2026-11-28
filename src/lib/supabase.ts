@@ -7,7 +7,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Отсутствуют PUBLIC_SUPABASE_URL или PUBLIC_SUPABASE_ANON_KEY. См. .env.example');
 }
 
-export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    storageKey: 'nmchv-forms-auth',
+    detectSessionInUrl: false,
+  },
+});
 
 export type UserRole = 'student' | 'tutor' | 'admin';
 
@@ -16,5 +23,5 @@ export interface SessionUser {
   email: string | null;
   username: string | null;
   display_name: string;
-  role: UserRole;
+  role: UserRole | null;
 }

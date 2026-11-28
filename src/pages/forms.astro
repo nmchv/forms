@@ -81,7 +81,7 @@ import Layout from '../layouts/Base.astro';
   </div>
 
   <script>
-    import { getCurrentUser } from '../lib/auth';
+    import { resolveAuth } from '../lib/auth';
     import { supabase } from '../lib/supabase';
 
     const form = document.getElementById('create-form') as HTMLFormElement;
@@ -197,15 +197,38 @@ import Layout from '../layouts/Base.astro';
     }
 
     async function checkAccess() {
-      const user = await getCurrentUser();
-      if (!user) {
+      const result = await resolveAuth();
+
+      if (result.status === 'unauthenticated') {
         showGate('Вы не вошли в аккаунт.', { href: '/login', label: 'Войти' });
         return;
       }
-      if (user.role === 'student') {
+
+      if (result.status === 'expired') {
+        showGate('Сессия истекла. Войдите ещё раз.', { href: '/login', label: 'Войти' });
+        return;
+      }
+
+      if (!result.user) {
+        showGate('Не удалось определить пользователя.');
+        return;
+      }
+
+      if (result.code === 'role_missing') {
+        showGate(result.error || 'Роль не назначена.');
+        return;
+      }
+
+      if (result.code === 'profile_error' || result.code === 'role_error') {
+        showGate(result.error || 'Ошибка загрузки данных.');
+        return;
+      }
+
+      if (result.user.role === 'student') {
         showGate('Создание форм доступно только учителям и суперадминам.');
         return;
       }
+
       gate.hidden = true;
       form.hidden = false;
       form.style.animation = 'fade-up 0.55s var(--ease) both';
@@ -219,8 +242,8 @@ import Layout from '../layouts/Base.astro';
       const description = formData.get('description') as string;
       const type = formData.get('type') as string;
 
-      const user = await getCurrentUser();
-      if (!user) return;
+      const result = await resolveAuth();
+      if (!result.user) return;
 
       submit.setAttribute('aria-busy', 'true');
       const { data, error } = await supabase
@@ -230,7 +253,7 @@ import Layout from '../layouts/Base.astro';
           description: description || '',
           form_type: type,
           status: 'draft',
-          owner_id: user.id,
+          owner_id: result.user.id,
         })
         .select()
         .single();

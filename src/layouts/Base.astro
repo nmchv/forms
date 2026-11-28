@@ -17,6 +17,13 @@ const {
     <title>{title}</title>
     <meta name="theme-color" content="#08090B" />
     <meta name="color-scheme" content="dark light" />
+    <script is:inline>
+      (function () {
+        if (location.hostname === 'forms.nmchv.ru') {
+          location.replace(`https://www.forms.nmchv.ru${location.pathname}${location.search}${location.hash}`);
+        }
+      })();
+    </script>
     <script is:inline src="/theme.js"></script>
     <script is:inline>document.documentElement.classList.add('js');</script>
     <script src="https://admin.nmchv.ru/maintenance.js" data-service="forms"></script>

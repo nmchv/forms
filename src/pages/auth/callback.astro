@@ -20,6 +20,7 @@ import Layout from '../../layouts/Base.astro';
     import { supabase } from '../../lib/supabase';
     import { getReturnTo } from '../../lib/sso';
 
+    const CALLBACK_HOST = 'www.forms.nmchv.ru';
     const status = document.getElementById('callback-status') as HTMLElement;
     const content = document.getElementById('callback-content') as HTMLElement;
 
@@ -35,18 +36,38 @@ import Layout from '../../layouts/Base.astro';
       content.append(p, a);
     }
 
+    (function canonicalize() {
+      if (location.hostname === 'forms.nmchv.ru') {
+        location.replace(`https://${CALLBACK_HOST}${location.pathname}${location.search}${location.hash}`);
+      }
+    })();
+
     async function handleCallback() {
       try {
         const params = new URLSearchParams(window.location.search);
+        const errorParam = params.get('error');
+        const errorDescription = params.get('error_description');
+
+        if (errorParam) {
+          fail('Ошибка авторизации', errorDescription || 'Целевая система вернула ошибку входа.');
+          return;
+        }
+
         const accessToken = params.get('access_token');
         const refreshToken = params.get('refresh_token');
 
         if (!accessToken || !refreshToken) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            window.location.replace(getReturnTo('/'));
+            return;
+          }
           fail('Токены сессии не получены.', 'Не удалось установить сессию. Пожалуйста, попробуйте войти ещё раз.');
           return;
         }
 
-        // Устанавливаем сессию Supabase на домене forms
+        history.replaceState(null, document.title, window.location.pathname);
+
         const { data, error } = await supabase.auth.setSession({
           access_token: accessToken,
           refresh_token: refreshToken,
@@ -57,11 +78,15 @@ import Layout from '../../layouts/Base.astro';
           return;
         }
 
-        status.textContent = `Вход выполнен как ${data.session.user.email}. Перенаправление…`;
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user || user.id !== data.session.user.id) {
+          fail('Сессия не прошла проверку.', 'Попробуйте войти ещё раз.');
+          return;
+        }
+
+        status.textContent = `Вход выполнен. Перенаправление…`;
         const returnTo = getReturnTo('/');
-        setTimeout(() => {
-          window.location.href = returnTo;
-        }, 800);
+        window.location.replace(returnTo);
       } catch (err) {
         fail('Ошибка при обработке авторизации.', err instanceof Error ? err.message : String(err));
       }

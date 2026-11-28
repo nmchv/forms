@@ -25,8 +25,9 @@ const current = (href: string): 'page' | undefined => (path === href ? 'page' : 
 </header>
 
 <script>
+  import { resolveAuth, signOut } from '../lib/auth';
   import { supabase } from '../lib/supabase';
-  import { getSSOUser, signOutSSO, initiateSSO } from '../lib/sso';
+  import { initiateSSO } from '../lib/sso';
 
   const controls = document.getElementById('auth-controls');
   const authBtn = document.getElementById('auth-btn');
@@ -48,16 +49,20 @@ const current = (href: string): 'page' | undefined => (path === href ? 'page' : 
   }
 
   async function initAuth() {
+    let roleMissing = false;
     let user = null;
     try {
-      user = await getSSOUser();
+      const result = await resolveAuth();
+      user = result.user;
+      roleMissing = result.code === 'role_missing';
     } catch {
       user = null;
+      roleMissing = false;
     }
 
     if (user) {
-      if (userRoleEl) userRoleEl.textContent = roleLabels[user.role] ?? 'Ученик';
-      setCreateVisible(user.role !== 'student');
+      if (userRoleEl) userRoleEl.textContent = roleMissing ? 'Роль не назначена' : (roleLabels[user.role] ?? 'Ученик');
+      setCreateVisible(user.role === 'tutor' || user.role === 'admin');
     } else {
       setCreateVisible(false);
     }
@@ -69,7 +74,8 @@ const current = (href: string): 'page' | undefined => (path === href ? 'page' : 
   });
 
   logoutBtn?.addEventListener('click', async () => {
-    await signOutSSO();
+    await signOut();
+    initAuth();
   });
 
   supabase.auth.onAuthStateChange(() => {
